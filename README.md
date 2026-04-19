@@ -1,6 +1,6 @@
 # WebSpatial OpenClaw Command Center
 
-A starter kit for building spatial AI agent interfaces on top of [OpenClaw](https://github.com/openclaw/openclaw) using the [WebSpatial SDK](https://github.com/webspatial/webspatial-sdk). Run it on a Pico headset (or any WebSpatial-capable device) to get a floating agent list and per-agent chat panels with voice input.
+A starter kit for building spatial AI agent interfaces on top of [OpenClaw](https://github.com/openclaw/openclaw) using the [WebSpatial SDK](https://github.com/webspatial/webspatial-sdk). Run it in the Pico emulator to get a floating agent list and per-agent chat panels with voice input.
 
 ---
 
@@ -17,7 +17,7 @@ A starter kit for building spatial AI agent interfaces on top of [OpenClaw](http
 
 - [Node.js](https://nodejs.org/) 22+
 - [Docker](https://www.docker.com/) (for running the OpenClaw gateway)
-- A Pico headset or the Pico emulator (see below)
+- Pico Emulator 0.11.1 (see below)
 
 ---
 
@@ -89,11 +89,13 @@ npm install
 npm run dev
 ```
 
-Vite starts on `http://localhost:5173`. The dev server proxies WebSocket connections to the OpenClaw gateway so the Pico only needs to reach port 5173 — no separate port forwarding for the gateway itself.
+Vite starts on `http://localhost:5173`. The dev server proxies WebSocket connections to the OpenClaw gateway so the emulator only needs to reach port 5173 — no separate port forwarding for the gateway itself.
 
 ---
 
-## 3. Run on Pico emulator
+## 3. Run in the Pico emulator
+
+The app runs in the **Pico Emulator** — a desktop app that simulates the Pico XR browser environment. A physical Pico headset is not required.
 
 Download **Pico Emulator 0.11.1** (required for the latest WebSpatial capabilities):
 
