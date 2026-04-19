@@ -69,8 +69,9 @@ export default function AgentChatPanel() {
     return () => { client.close(); clientRef.current = null }
   }, [agentId])
 
-  // Auto-scroll to bottom when messages change
+  // Scroll to bottom whenever messages change (history load or new message)
   useEffect(() => {
+    if (messages.length === 0) return
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages])
 
