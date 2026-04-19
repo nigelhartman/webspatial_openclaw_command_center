@@ -142,6 +142,11 @@ export default function AgentChatPanel() {
     }
   }
 
+  async function handleNewSession() {
+    setMessages([])
+    await sendMessage('/new')
+  }
+
   async function handleVoiceTap() {
     const transcript = await voice.toggle()
     if (transcript?.trim()) {
@@ -193,6 +198,17 @@ export default function AgentChatPanel() {
             <span className="chat-header-emoji">{agent.identity.emoji}</span>
           )}
           <span className="chat-header-name">{agentLabel}</span>
+          <div
+            role="button"
+            tabIndex={isSending ? -1 : 0}
+            className={`new-session-btn${isSending ? ' disabled' : ''}`}
+            onClick={isSending ? undefined : handleNewSession}
+            onKeyDown={e => { if (!isSending && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); handleNewSession() } }}
+            aria-label="New session"
+            aria-disabled={isSending}
+          >
+            New
+          </div>
         </header>
 
         <div className="chat-messages">
