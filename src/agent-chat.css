@@ -84,6 +84,31 @@
   50% { opacity: 0; }
 }
 
+/* Inline URL buttons inside messages */
+.msg-link-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin: 1px 3px;
+  padding: 2px 9px;
+  border-radius: 6px;
+  border: 1px solid rgba(10, 132, 255, 0.5);
+  background: rgba(10, 132, 255, 0.15);
+  color: rgba(100, 180, 255, 1);
+  font: inherit;
+  font-size: 0.8rem;
+  cursor: pointer;
+  vertical-align: middle;
+  word-break: break-all;
+  --xr-back: 8px;
+  transition: background 0.12s, border-color 0.12s;
+}
+
+.msg-link-btn:hover {
+  background: rgba(10, 132, 255, 0.28);
+  border-color: rgba(10, 132, 255, 0.8);
+}
+
 /* Voice controls */
 .chat-controls {
   padding: 12px 16px 16px;

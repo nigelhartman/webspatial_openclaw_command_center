@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from 'react'
+import { initScene } from '@webspatial/react-sdk'
 import { OpenClawClient, type Agent, type ChatMessage } from './lib/openclaw.ts'
 import { useVoice } from './lib/useVoice.ts'
+import { parseLinks, shortenUrl } from './lib/parseLinks.ts'
 import './agent-chat.css'
 
 const PANEL_CHANNEL = 'openclaw-panels'
@@ -20,6 +22,7 @@ export default function AgentChatPanel() {
   const [isSending, setIsSending] = useState(false)
   const clientRef = useRef<OpenClawClient | null>(null)
   const bottomRef = useRef<HTMLDivElement>(null)
+  const webviewRefs = useRef(new Map<string, Window>())
   const voice = useVoice()
 
   // Register this panel as open and broadcast to the agents list
@@ -74,6 +77,20 @@ export default function AgentChatPanel() {
     if (messages.length === 0) return
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages])
+
+  function openWebView(url: string) {
+    // If already open and not closed, do nothing
+    const existing = webviewRefs.current.get(url)
+    if (existing && !existing.closed) return
+
+    const sceneId = `webview-${btoa(url).replace(/[^a-zA-Z0-9]/g, '').slice(0, 48)}`
+    initScene(sceneId, defaults => ({
+      ...defaults,
+      defaultSize: { width: 800, height: 700 },
+    }))
+    const win = window.open(`/webview.html?url=${encodeURIComponent(url)}`, sceneId)
+    if (win) webviewRefs.current.set(url, win)
+  }
 
   async function sendMessage(text: string) {
     if (!text.trim() || isSending || !clientRef.current) return
@@ -142,6 +159,32 @@ export default function AgentChatPanel() {
     return 'Tap to speak'
   }
 
+  function renderMessage(msg: StreamingMessage) {
+    if (!msg.content) return msg.streaming ? null : '…'
+    const segments = parseLinks(msg.content)
+    // If no URLs found, render plain (preserves pre-wrap whitespace with no extra nodes)
+    if (segments.length === 1 && segments[0].type === 'text') return msg.content
+    return segments.map((seg, i) => {
+      if (seg.type === 'url') {
+        return (
+          <span
+            key={i}
+            role="button"
+            tabIndex={0}
+            className="msg-link-btn"
+            onClick={() => openWebView(seg.value)}
+            onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openWebView(seg.value) } }}
+            title={seg.value}
+            enable-xr
+          >
+            {shortenUrl(seg.value)}
+          </span>
+        )
+      }
+      return <span key={i}>{seg.value}</span>
+    })
+  }
+
   return (
     <main className="chat-scene" enable-xr-monitor>
       <div className="chat-panel" enable-xr>
@@ -159,7 +202,7 @@ export default function AgentChatPanel() {
               key={i}
               className={`msg ${msg.role === 'user' ? 'msg-user' : `msg-assistant${msg.streaming ? ' streaming' : ''}`}`}
             >
-              {msg.content || (msg.streaming ? '' : '…')}
+              {renderMessage(msg)}
             </div>
           ))}
           <div ref={bottomRef} />
