@@ -7,6 +7,14 @@ function buildWsUrl(): string {
 
 const TOKEN = import.meta.env.VITE_OPENCLAW_TOKEN as string
 
+const SCOPES = [
+  'operator.read',
+  'operator.write',
+  'operator.admin',
+  'operator.approvals',
+  'operator.pairing',
+]
+
 export interface Agent {
   id: string
   name: string
@@ -34,6 +42,83 @@ function extractText(content: unknown): string {
 
 type Payload = Record<string, unknown>
 
+// ─── Device identity (Ed25519 via SubtleCrypto) ────────────────────────────
+
+const DEVICE_KEY = 'openclaw-device-identity'
+
+interface StoredDevice {
+  id: string
+  publicKeyBase64Url: string
+  privateKeyPkcs8Base64: string
+}
+
+function toBase64Url(buffer: ArrayBuffer | Uint8Array): string {
+  const bytes = buffer instanceof Uint8Array ? buffer : new Uint8Array(buffer)
+  return btoa(String.fromCharCode(...bytes))
+    .replaceAll('+', '-')
+    .replaceAll('/', '_')
+    .replace(/=+$/, '')
+}
+
+async function loadOrCreateDevice(): Promise<StoredDevice | null> {
+  if (!window.isSecureContext || !window.crypto?.subtle) {
+    return null
+  }
+  try {
+    const raw = localStorage.getItem(DEVICE_KEY)
+    if (raw) {
+      const parsed = JSON.parse(raw) as StoredDevice
+      if (parsed.id && parsed.publicKeyBase64Url && parsed.privateKeyPkcs8Base64) {
+        return parsed
+      }
+    }
+    // Generate new Ed25519 key pair
+    const kp = await crypto.subtle.generateKey({ name: 'Ed25519' }, true, ['sign', 'verify'])
+    const pubRaw = await crypto.subtle.exportKey('raw', kp.publicKey as CryptoKey)
+    const privPkcs8 = await crypto.subtle.exportKey('pkcs8', kp.privateKey as CryptoKey)
+    const publicKeyBase64Url = toBase64Url(pubRaw)
+    const hashBuf = await crypto.subtle.digest('SHA-256', pubRaw)
+    const id = Array.from(new Uint8Array(hashBuf)).map(b => b.toString(16).padStart(2, '0')).join('')
+    const privateKeyPkcs8Base64 = btoa(String.fromCharCode(...new Uint8Array(privPkcs8)))
+    const device: StoredDevice = { id, publicKeyBase64Url, privateKeyPkcs8Base64 }
+    localStorage.setItem(DEVICE_KEY, JSON.stringify(device))
+    return device
+  } catch {
+    return null
+  }
+}
+
+async function buildDeviceObject(stored: StoredDevice, nonce: string) {
+  const pkcs8 = Uint8Array.from(atob(stored.privateKeyPkcs8Base64), c => c.charCodeAt(0))
+  const privateKey = await crypto.subtle.importKey('pkcs8', pkcs8, { name: 'Ed25519' }, false, ['sign'])
+  const signedAt = Date.now()
+  // V3 payload must match what the server reconstructs from connectParams
+  // platform = client.platform ('web'), deviceFamily = client.deviceFamily (undefined → '')
+  const payload = [
+    'v3',
+    stored.id,
+    'openclaw-control-ui',
+    'ui',
+    'operator',
+    SCOPES.join(','),
+    String(signedAt),
+    TOKEN,
+    nonce,
+    'web', // matches client.platform below
+    '',    // matches client.deviceFamily (not set)
+  ].join('|')
+  const sigBuf = await crypto.subtle.sign('Ed25519', privateKey, new TextEncoder().encode(payload))
+  return {
+    id: stored.id,
+    publicKey: stored.publicKeyBase64Url,
+    signature: toBase64Url(sigBuf),
+    signedAt,
+    nonce,
+  }
+}
+
+// ─── WebSocket client ──────────────────────────────────────────────────────
+
 export class OpenClawClient {
   private ws: WebSocket | null = null
   private msgId = 0
@@ -49,42 +134,54 @@ export class OpenClawClient {
   connect(): Promise<void> {
     if (this.connectPromise) return this.connectPromise
     this.connectPromise = new Promise((resolve, reject) => {
+      if (!window.isSecureContext) {
+        reject(new Error(
+          'Device authentication requires a secure context. ' +
+          'Access the app via http://localhost:5173 using ADB reverse, not via the host IP.'
+        ))
+        this.connectPromise = null
+        return
+      }
+
       const ws = new WebSocket(buildWsUrl())
       this.ws = ws
 
-      ws.onopen = () => {
-        const id = this.id()
-        this.resolvers.set(id, () => resolve())
-        this.rejecters.set(id, reject)
-        ws.send(JSON.stringify({
-          type: 'req', id,
-          method: 'connect',
-          params: {
-            minProtocol: 1,
-            maxProtocol: 3,
-            client: {
-              id: 'openclaw-control-ui',
-              version: '1.0.0',
-              platform: 'web',
-              mode: 'ui',
-            },
-            auth: { token: TOKEN },
-            scopes: [
-              'operator.read',
-              'operator.write',
-              'operator.admin',
-              'operator.approvals',
-              'operator.pairing',
-            ],
-          },
-        }))
-      }
-
-      ws.onmessage = (e) => {
+      ws.onmessage = async (e) => {
         const msg = JSON.parse(e.data as string) as {
           type: string; id?: string; ok?: boolean
           payload?: Payload; error?: unknown; event?: string
         }
+
+        // Wait for connect.challenge before sending connect request
+        if (msg.type === 'event' && msg.event === 'connect.challenge') {
+          const nonce = (msg.payload as { nonce?: string })?.nonce ?? ''
+          const id = this.id()
+          this.resolvers.set(id, () => resolve())
+          this.rejecters.set(id, reject)
+
+          const stored = await loadOrCreateDevice()
+          const device = stored && nonce ? await buildDeviceObject(stored, nonce) : undefined
+
+          ws.send(JSON.stringify({
+            type: 'req', id,
+            method: 'connect',
+            params: {
+              minProtocol: 1,
+              maxProtocol: 3,
+              client: {
+                id: 'openclaw-control-ui',
+                version: '1.0.0',
+                platform: 'web',
+                mode: 'ui',
+              },
+              auth: { token: TOKEN },
+              scopes: SCOPES,
+              device,
+            },
+          }))
+          return
+        }
+
         if (msg.type === 'res' && msg.id) {
           const res = this.resolvers.get(msg.id)
           const rej = this.rejecters.get(msg.id)

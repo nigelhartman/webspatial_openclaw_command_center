@@ -5,29 +5,42 @@ import './agents-panel.css'
 
 const PANEL_CHANNEL = 'openclaw-panels'
 
-function readOpenPanels(): Set<string> {
-  const open = new Set<string>()
-  for (let i = 0; i < localStorage.length; i++) {
+function clearStalePanelStorage() {
+  for (let i = localStorage.length - 1; i >= 0; i--) {
     const key = localStorage.key(i)
-    if (key?.startsWith('openclaw-panel-')) {
-      open.add(key.slice('openclaw-panel-'.length))
-    }
+    if (key?.startsWith('openclaw-panel-')) localStorage.removeItem(key)
   }
-  return open
 }
 
 export default function AgentsPanel() {
   const [agents, setAgents] = useState<Agent[]>([])
-  const [openPanels, setOpenPanels] = useState<Set<string>>(readOpenPanels)
+  const [openPanels, setOpenPanels] = useState<Set<string>>(new Set())
   const [error, setError] = useState<string | null>(null)
   const windowRefs = useRef(new Map<string, Window>())
+
+  // Clear any stale panel state from a previous session
+  useEffect(() => { clearStalePanelStorage() }, [])
+
+  // Poll open windows every 500ms — more reliable than beforeunload on WebSpatial
+  useEffect(() => {
+    const id = setInterval(() => {
+      windowRefs.current.forEach((win, agentId) => {
+        if (win.closed) {
+          windowRefs.current.delete(agentId)
+          localStorage.removeItem(`openclaw-panel-${agentId}`)
+          setOpenPanels(prev => { const next = new Set(prev); next.delete(agentId); return next })
+        }
+      })
+    }, 500)
+    return () => clearInterval(id)
+  }, [])
 
   // Load agents from OpenClaw
   useEffect(() => {
     const client = new OpenClawClient()
     client.listAgents()
       .then(list => {
-        console.log('[openclaw] agents.list raw:', JSON.stringify(list))
+        setError(null)
         setAgents(list)
       })
       .catch((e: unknown) => {
@@ -80,12 +93,6 @@ export default function AgentsPanel() {
         {error && <p className="agents-empty">{error}</p>}
         {!error && agents.length === 0 && (
           <p className="agents-empty">Loading…</p>
-        )}
-
-        {agents.length > 0 && (
-          <pre style={{ fontSize: '0.6rem', opacity: 0.6, whiteSpace: 'pre-wrap', wordBreak: 'break-all', margin: '0 0 12px' }}>
-            {JSON.stringify(agents, null, 2)}
-          </pre>
         )}
 
         {agents.map(agent => {

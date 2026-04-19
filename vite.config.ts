@@ -13,6 +13,8 @@ export default defineConfig({
       '/openclaw-ws': {
         target: 'ws://localhost:18789',
         ws: true,
+        // Prevent x-forwarded-* headers so isLocalDirectRequest stays true
+        xfwd: false,
         // OpenClaw WS server expects connections at /, not /openclaw-ws
         rewrite: (path) => path.replace(/^\/openclaw-ws/, '') || '/',
         // Gateway checks Origin against allowedOrigins — spoof it to the allowed value
@@ -24,7 +26,6 @@ export default defineConfig({
     rollupOptions: {
       input: {
         main: resolve(__dirname, "index.html"),
-        agents: resolve(__dirname, "agents.html"),
         "agent-chat": resolve(__dirname, "agent-chat.html"),
       },
     },
