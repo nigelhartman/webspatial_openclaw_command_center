@@ -13,6 +13,8 @@ export default defineConfig({
       '/openclaw-ws': {
         target: 'ws://localhost:18789',
         ws: true,
+        // OpenClaw WS server expects connections at /, not /openclaw-ws
+        rewrite: (path) => path.replace(/^\/openclaw-ws/, '') || '/',
       },
     },
   },

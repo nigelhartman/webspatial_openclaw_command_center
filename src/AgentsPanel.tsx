@@ -30,7 +30,13 @@ export default function AgentsPanel() {
         console.log('[openclaw] agents.list raw:', JSON.stringify(list))
         setAgents(list)
       })
-      .catch((e) => setError(String(e)))
+      .catch((e: unknown) => {
+        const msg =
+          e instanceof Error ? e.message
+          : typeof e === 'object' && e !== null ? JSON.stringify(e)
+          : String(e)
+        setError(msg)
+      })
     return () => client.close()
   }, [])
 
