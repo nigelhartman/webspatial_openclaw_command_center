@@ -15,6 +15,8 @@ export default defineConfig({
         ws: true,
         // OpenClaw WS server expects connections at /, not /openclaw-ws
         rewrite: (path) => path.replace(/^\/openclaw-ws/, '') || '/',
+        // Gateway checks Origin against allowedOrigins — spoof it to the allowed value
+        headers: { origin: 'http://localhost:18789' },
       },
     },
   },
