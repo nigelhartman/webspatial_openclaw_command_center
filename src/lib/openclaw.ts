@@ -69,6 +69,13 @@ export class OpenClawClient {
               mode: 'webchat',
             },
             auth: { token: TOKEN },
+            scopes: [
+              'operator.read',
+              'operator.write',
+              'operator.admin',
+              'operator.approvals',
+              'operator.pairing',
+            ],
           },
         }))
       }
