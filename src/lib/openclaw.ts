@@ -63,10 +63,10 @@ export class OpenClawClient {
             minProtocol: 1,
             maxProtocol: 3,
             client: {
-              id: 'webchat-ui',
+              id: 'openclaw-control-ui',
               version: '1.0.0',
               platform: 'web',
-              mode: 'webchat',
+              mode: 'ui',
             },
             auth: { token: TOKEN },
             scopes: [
