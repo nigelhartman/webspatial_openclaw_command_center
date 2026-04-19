@@ -59,7 +59,17 @@ export class OpenClawClient {
         ws.send(JSON.stringify({
           type: 'req', id,
           method: 'connect',
-          params: { auth: { token: TOKEN } },
+          params: {
+            minProtocol: 1,
+            maxProtocol: 3,
+            client: {
+              id: 'webchat-ui',
+              version: '1.0.0',
+              platform: 'web',
+              mode: 'webchat',
+            },
+            auth: { token: TOKEN },
+          },
         }))
       }
 
