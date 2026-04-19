@@ -76,6 +76,12 @@ export default function AgentsPanel() {
           <p className="agents-empty">Loading…</p>
         )}
 
+        {agents.length > 0 && (
+          <pre style={{ fontSize: '0.6rem', opacity: 0.6, whiteSpace: 'pre-wrap', wordBreak: 'break-all', margin: '0 0 12px' }}>
+            {JSON.stringify(agents, null, 2)}
+          </pre>
+        )}
+
         {agents.map(agent => {
           const isOpen = openPanels.has(agent.id)
 
