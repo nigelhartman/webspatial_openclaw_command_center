@@ -175,7 +175,6 @@ export default function AgentChatPanel() {
             onClick={() => openWebView(seg.value)}
             onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openWebView(seg.value) } }}
             title={seg.value}
-            enable-xr
           >
             {shortenUrl(seg.value)}
           </span>
