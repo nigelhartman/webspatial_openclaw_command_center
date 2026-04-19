@@ -5,7 +5,17 @@ import { resolve } from "path";
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [react()],
-  server: { host: true },
+  server: {
+    host: true,
+    proxy: {
+      // Forward WebSocket connections to OpenClaw through Vite so the Pico
+      // only needs to reach the Vite port (5173) — no separate ADB reverse needed.
+      '/openclaw-ws': {
+        target: 'ws://localhost:18789',
+        ws: true,
+      },
+    },
+  },
   build: {
     rollupOptions: {
       input: {

@@ -1,4 +1,10 @@
-const WS_URL = import.meta.env.VITE_OPENCLAW_WS_URL as string
+// Derive WS URL from the page origin so it works on any device that can
+// reach the Vite dev server (Pico, browser, etc.) without a separate port.
+function buildWsUrl(): string {
+  const proto = window.location.protocol === 'https:' ? 'wss' : 'ws'
+  return `${proto}://${window.location.host}/openclaw-ws`
+}
+
 const TOKEN = import.meta.env.VITE_OPENCLAW_TOKEN as string
 
 export interface Agent {
@@ -43,7 +49,7 @@ export class OpenClawClient {
   connect(): Promise<void> {
     if (this.connectPromise) return this.connectPromise
     this.connectPromise = new Promise((resolve, reject) => {
-      const ws = new WebSocket(WS_URL)
+      const ws = new WebSocket(buildWsUrl())
       this.ws = ws
 
       ws.onopen = () => {
