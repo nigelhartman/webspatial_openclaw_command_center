@@ -10,8 +10,8 @@ export default defineConfig({
     rollupOptions: {
       input: {
         main: resolve(__dirname, "index.html"),
-        "panel-a": resolve(__dirname, "panel-a.html"),
-        "panel-b": resolve(__dirname, "panel-b.html"),
+        agents: resolve(__dirname, "agents.html"),
+        "agent-chat": resolve(__dirname, "agent-chat.html"),
       },
     },
   },

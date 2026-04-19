@@ -3,17 +3,11 @@ import { initScene } from '@webspatial/react-sdk'
 
 function App() {
   useEffect(() => {
-    initScene('panel-a', defaults => ({
+    initScene('agents', defaults => ({
       ...defaults,
-      defaultSize: { width: 600, height: 400 },
+      defaultSize: { width: 320, height: 480 },
     }))
-    window.open('/panel-a.html', 'panel-a')
-
-    initScene('panel-b', defaults => ({
-      ...defaults,
-      defaultSize: { width: 600, height: 400 },
-    }))
-    window.open('/panel-b.html', 'panel-b')
+    window.open('/agents.html', 'agents')
   }, [])
 
   return null
