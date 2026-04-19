@@ -26,7 +26,10 @@ export default function AgentsPanel() {
   useEffect(() => {
     const client = new OpenClawClient()
     client.listAgents()
-      .then(setAgents)
+      .then(list => {
+        console.log('[openclaw] agents.list raw:', JSON.stringify(list))
+        setAgents(list)
+      })
       .catch((e) => setError(String(e)))
     return () => client.close()
   }, [])
@@ -75,6 +78,17 @@ export default function AgentsPanel() {
 
         {agents.map(agent => {
           const isOpen = openPanels.has(agent.id)
+
+          // Safely extract strings — guard against unexpected non-string values
+          const rawName = agent.identity?.name ?? agent.name
+          const displayName = typeof rawName === 'string' && rawName.trim()
+            ? rawName.trim()
+            : agent.id
+
+          const emoji = typeof agent.identity?.emoji === 'string'
+            ? agent.identity.emoji
+            : null
+
           return (
             <button
               key={agent.id}
@@ -82,12 +96,8 @@ export default function AgentsPanel() {
               onClick={() => handleAgentClick(agent.id)}
               enable-xr
             >
-              {agent.identity?.emoji && (
-                <span className="agent-emoji">{agent.identity.emoji}</span>
-              )}
-              <span className="agent-name">
-                {agent.identity?.name ?? agent.name ?? agent.id}
-              </span>
+              {emoji && <span className="agent-emoji">{emoji}</span>}
+              <span className="agent-name">{displayName}</span>
               <span className="agent-status-dot" />
             </button>
           )
