@@ -256,21 +256,28 @@ export class OpenClawClient {
     // Safety timeout: settle after 60s if no done signal arrives
     const timeout = setTimeout(settle, 60_000)
 
+    // Gateway emits events with a canonical session key like "agent:main:main"
+    // even when we passed the bare key "main". Accept both forms.
+    const matchesSession = (key: unknown) =>
+      typeof key !== 'string' ||
+      key === sessionKey ||
+      key.endsWith(':' + sessionKey)
+
     const offChat = this.on('chat', (p) => {
-      if (typeof p.sessionKey === 'string' && p.sessionKey !== sessionKey) return
+      if (!matchesSession(p.sessionKey)) return
       const msg = p.message as Payload | undefined
       if (msg?.content !== undefined) {
         const text = extractText(msg.content)
         if (text) onChunk(text)
       }
-      if (p.state === 'final') {
+      if (p.state === 'final' || p.state === 'aborted' || p.state === 'error') {
         clearTimeout(timeout)
         settle()
       }
     })
 
     const offAgent = this.on('agent', (p) => {
-      if (typeof p.sessionKey === 'string' && p.sessionKey !== sessionKey) return
+      if (!matchesSession(p.sessionKey)) return
       const data = p.data as Payload | undefined
       if (data?.phase === 'done' || p.stream === 'done') {
         clearTimeout(timeout)

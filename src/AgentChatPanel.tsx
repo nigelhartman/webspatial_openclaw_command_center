@@ -93,7 +93,8 @@ export default function AgentChatPanel() {
             const next = [...prev]
             const last = next[next.length - 1]
             if (last?.role === 'assistant' && last.streaming) {
-              next[next.length - 1] = { ...last, content: last.content + chunk }
+              // Each chunk is the full accumulated text so far — replace, don't append
+              next[next.length - 1] = { ...last, content: chunk }
             }
             return next
           })
@@ -164,15 +165,21 @@ export default function AgentChatPanel() {
         </div>
 
         <div className="chat-controls">
-          <button
+          {/* div+role instead of <button> — <button enable-xr> blocks clicks in WebSpatial XR mode */}
+          <div
+            role="button"
+            tabIndex={voiceDisabled ? -1 : 0}
             className={`voice-btn${voice.isRecording ? ' recording' : ''}${voice.isTranscribing ? ' transcribing' : ''}`}
-            onClick={handleVoiceTap}
-            disabled={voiceDisabled}
+            onClick={voiceDisabled ? undefined : handleVoiceTap}
+            onKeyDown={e => { if (!voiceDisabled && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); handleVoiceTap() } }}
+            aria-label={voiceBtnLabel()}
+            aria-pressed={voice.isRecording}
+            aria-disabled={voiceDisabled}
             enable-xr
           >
             {voice.isRecording && <span className="voice-dot" />}
             {voiceBtnLabel()}
-          </button>
+          </div>
           {voice.error && <p className="voice-error">{voice.error}</p>}
         </div>
 
