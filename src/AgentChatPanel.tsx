@@ -20,6 +20,7 @@ export default function AgentChatPanel() {
   const [agent, setAgent] = useState<Agent | null>(null)
   const [messages, setMessages] = useState<StreamingMessage[]>([])
   const [isSending, setIsSending] = useState(false)
+  const [initError, setInitError] = useState<string | null>(null)
   const clientRef = useRef<OpenClawClient | null>(null)
   const bottomRef = useRef<HTMLDivElement>(null)
   const webviewRefs = useRef(new Map<string, Window>())
@@ -68,14 +69,24 @@ export default function AgentChatPanel() {
     async function init() {
       try {
         await initOnce()
-      } catch {
-        // First attempt failed (e.g. expired device signature) — reconnect and retry once
+        setInitError(null)
+      } catch (e1) {
+        // First attempt failed (e.g. expired/stale device signature — key wiped in client).
+        // Retry once with a fresh identity.
         client.close()
-        await initOnce()
+        try {
+          await initOnce()
+          setInitError(null)
+        } catch (e2) {
+          const msg = (e2 as { message?: string })?.message
+            ?? (e2 as { code?: string })?.code
+            ?? String(e2)
+          setInitError(msg)
+        }
       }
     }
 
-    init().catch(console.error)
+    init()
     return () => { client.close(); clientRef.current = null }
   }, [agentId])
 
@@ -219,6 +230,12 @@ export default function AgentChatPanel() {
         </header>
 
         <div className="chat-messages">
+          {initError && (
+            <div className="chat-init-error">
+              <span>Connection failed: {initError}</span>
+              <span className="chat-init-error-hint">Try restarting the OpenClaw gateway (<code>docker compose restart</code>) then reload this panel.</span>
+            </div>
+          )}
           {messages.map((msg, i) => (
             <div
               key={i}

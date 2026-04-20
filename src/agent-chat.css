@@ -107,6 +107,32 @@
   50% { opacity: 0; }
 }
 
+/* Connection error banner */
+.chat-init-error {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: rgba(255, 69, 58, 0.12);
+  border: 1px solid rgba(255, 69, 58, 0.3);
+  color: rgba(255, 150, 140, 1);
+  font-size: 0.82rem;
+  line-height: 1.5;
+}
+
+.chat-init-error-hint {
+  color: rgba(255, 255, 255, 0.45);
+  font-size: 0.76rem;
+}
+
+.chat-init-error code {
+  font-family: monospace;
+  background: rgba(255,255,255,0.08);
+  padding: 1px 5px;
+  border-radius: 4px;
+}
+
 /* Inline URL links inside messages — styled as text, no depth offset */
 .msg-link-btn {
   display: inline;

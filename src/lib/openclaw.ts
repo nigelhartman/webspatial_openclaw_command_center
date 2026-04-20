@@ -157,10 +157,18 @@ export class OpenClawClient {
           const nonce = (msg.payload as { nonce?: string })?.nonce ?? ''
           const id = this.id()
           this.resolvers.set(id, () => resolve())
-          // Clear connectPromise immediately on auth rejection so the next
-          // call creates a fresh WebSocket with a new signature instead of
-          // returning the same rejected promise.
-          this.rejecters.set(id, (e) => { this.connectPromise = null; reject(e) })
+          this.rejecters.set(id, (e) => {
+            this.connectPromise = null
+            // If the gateway says the device signature is expired/stale, wipe the stored
+            // key so the next connect() generates a fresh device identity. The next
+            // attempt will either succeed or return PAIRING_REQUIRED for the new device.
+            const code = (e as { details?: { code?: string } })?.details?.code
+              ?? (e as { code?: string })?.code
+            if (code === 'DEVICE_AUTH_SIGNATURE_EXPIRED') {
+              localStorage.removeItem(DEVICE_KEY)
+            }
+            reject(e)
+          })
 
           const stored = await loadOrCreateDevice()
           const device = stored && nonce ? await buildDeviceObject(stored, nonce) : undefined
@@ -201,7 +209,21 @@ export class OpenClawClient {
         reject(new Error('WebSocket error'))
         this.connectPromise = null
       }
-      ws.onclose = () => { this.connectPromise = null }
+      ws.onclose = (event) => {
+        this.connectPromise = null
+        // Gateway closes with code 1008 + reason string instead of sending a JSON
+        // error response — reject the connect promise so callers don't hang forever.
+        const reason = event.reason || 'WebSocket closed'
+        if (reason.toLowerCase().includes('signature') || reason.toLowerCase().includes('device')) {
+          localStorage.removeItem(DEVICE_KEY)
+        }
+        // reject() is a no-op if the promise already settled
+        reject(new Error(reason))
+        // Also unblock any in-flight requests on an unexpected close
+        this.rejecters.forEach(rej => rej(new Error(reason)))
+        this.rejecters.clear()
+        this.resolvers.clear()
+      }
     })
     return this.connectPromise
   }
