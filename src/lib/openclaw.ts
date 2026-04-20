@@ -157,7 +157,10 @@ export class OpenClawClient {
           const nonce = (msg.payload as { nonce?: string })?.nonce ?? ''
           const id = this.id()
           this.resolvers.set(id, () => resolve())
-          this.rejecters.set(id, reject)
+          // Clear connectPromise immediately on auth rejection so the next
+          // call creates a fresh WebSocket with a new signature instead of
+          // returning the same rejected promise.
+          this.rejecters.set(id, (e) => { this.connectPromise = null; reject(e) })
 
           const stored = await loadOrCreateDevice()
           const device = stored && nonce ? await buildDeviceObject(stored, nonce) : undefined

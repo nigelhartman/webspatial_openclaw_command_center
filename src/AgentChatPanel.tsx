@@ -53,18 +53,25 @@ export default function AgentChatPanel() {
     const client = new OpenClawClient()
     clientRef.current = client
 
-    async function init() {
-      // Load agent metadata
+    async function initOnce() {
       const agents = await client.listAgents()
       const found = agents.find(a => a.id === agentId) ?? null
       setAgent(found)
-
-      // Load history
       try {
         const history = await client.getHistory(agentId)
         setMessages(history)
       } catch {
         // No prior history — that's fine
+      }
+    }
+
+    async function init() {
+      try {
+        await initOnce()
+      } catch {
+        // First attempt failed (e.g. expired device signature) — reconnect and retry once
+        client.close()
+        await initOnce()
       }
     }
 
