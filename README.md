@@ -121,13 +121,15 @@ Then open `http://localhost:5173` inside the emulator's browser.
 
 ### Approve the device on first connect
 
-The first time you connect, the gateway will reject with `PAIRING_REQUIRED` and return a `requestId`. Approve it from the OpenClaw CLI (run this from the `openclaw` directory):
+**Every time you open the app for the first time** (or after clearing browser storage), the gateway will reject the connection with `PAIRING_REQUIRED`. You need to approve the device once from the OpenClaw CLI.
+
+Watch the gateway logs or the chat panel error message for the `requestId`, then run this from the `openclaw` directory:
 
 ```bash
 docker compose run --rm openclaw-cli devices approve <requestId>
 ```
 
-After approval, reload the app. The device key is stored in `localStorage` and reused automatically on subsequent connections — you won't need to pair again unless you clear browser storage.
+**After approving, reload the app in the emulator.** The device key is stored in `localStorage` and reused automatically on all subsequent connections — you won't need to pair again unless you clear browser storage.
 
 ---
 
@@ -170,7 +172,9 @@ The browser generates an Ed25519 key pair on first use (stored in `localStorage`
 |---------|-------------|-----|
 | `WebSocket error` | Gateway not running | Start OpenClaw with `docker compose up` |
 | `origin not allowed` | Connecting from host IP instead of localhost | Set up ADB reverse; use `localhost:5173` |
-| `PAIRING_REQUIRED` | New device not yet approved | Run `docker compose run --rm openclaw-cli devices approve <id>` |
+| `PAIRING_REQUIRED` | New device not yet approved | Run `docker compose run --rm openclaw-cli devices approve <id>`, then **reload the app** |
+| Chat panel shows "Connection failed" | Device key expired or first launch | The app will auto-retry with a new key — approve the new device pairing, then reload |
+| `device signature expired` (WS close 1008) | Gateway closed connection before auth completed | The app clears the stale key and retries automatically; approve the new pairing if prompted |
 | `Device authentication requires a secure context` | Accessing via host IP | Set up ADB reverse; use `localhost:5173` |
 | Voice button does nothing | Microphone permission denied | Allow microphone access when prompted in the emulator |
 | Agents list shows error | Wrong or missing token | Check `VITE_OPENCLAW_TOKEN` in `.env` |
