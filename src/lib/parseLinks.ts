@@ -45,6 +45,7 @@ export function shortenUrl(url: string): string {
 
 const MODEL_EXTS = ['.glb', '.usdz']
 const AUDIO_EXTS = ['.mp3', '.wav', '.ogg', '.m4a', '.aac', '.flac']
+const VIDEO_EXTS = ['.mp4', '.webm', '.mov', '.mkv', '.avi']
 
 export function isModelUrl(url: string): boolean {
   try {
@@ -62,6 +63,16 @@ export function modelFilename(url: string): string {
     return parts[parts.length - 1] || url
   } catch {
     return url.split('/').pop() || url
+  }
+}
+
+export function isVideoUrl(url: string): boolean {
+  try {
+    const pathname = new URL(url).pathname.toLowerCase()
+    return VIDEO_EXTS.some(ext => pathname.endsWith(ext))
+  } catch {
+    const lower = url.toLowerCase().split('?')[0]
+    return VIDEO_EXTS.some(ext => lower.endsWith(ext))
   }
 }
 

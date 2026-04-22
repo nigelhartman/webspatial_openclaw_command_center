@@ -30,6 +30,7 @@ export default defineConfig({
         webview: resolve(__dirname, "webview.html"),
         "model-view": resolve(__dirname, "model-view.html"),
         "audio-player": resolve(__dirname, "audio-player.html"),
+        "video-player": resolve(__dirname, "video-player.html"),
       },
     },
   },

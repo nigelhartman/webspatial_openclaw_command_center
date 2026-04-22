@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { initScene } from '@webspatial/react-sdk'
 import { OpenClawClient, type Agent, type ChatMessage } from './lib/openclaw.ts'
 import { useVoice } from './lib/useVoice.ts'
-import { parseLinks, shortenUrl, isModelUrl, modelFilename, isAudioUrl, fileBasename } from './lib/parseLinks.ts'
+import { parseLinks, shortenUrl, isModelUrl, modelFilename, isAudioUrl, isVideoUrl, fileBasename } from './lib/parseLinks.ts'
 import './agent-chat.css'
 
 const PANEL_CHANNEL = 'openclaw-panels'
@@ -117,6 +117,13 @@ export default function AgentChatPanel() {
       }))
       const win = window.open(`/audio-player.html?url=${encodeURIComponent(url)}`, sceneId)
       if (win) webviewRefs.current.set(url, win)
+    } else if (isVideoUrl(url)) {
+      initScene(sceneId, defaults => ({
+        ...defaults,
+        defaultSize: { width: 720, height: 500 },
+      }))
+      const win = window.open(`/video-player.html?url=${encodeURIComponent(url)}`, sceneId)
+      if (win) webviewRefs.current.set(url, win)
     } else {
       initScene(sceneId, defaults => ({
         ...defaults,
@@ -207,7 +214,7 @@ export default function AgentChatPanel() {
     return segments.map((seg, i) => {
       if (seg.type === 'url') {
         const label = isModelUrl(seg.value) ? modelFilename(seg.value)
-          : isAudioUrl(seg.value) ? fileBasename(seg.value)
+          : isAudioUrl(seg.value) || isVideoUrl(seg.value) ? fileBasename(seg.value)
           : shortenUrl(seg.value)
         return (
           <span

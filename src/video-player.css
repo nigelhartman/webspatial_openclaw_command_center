@@ -1,0 +1,137 @@
+.video-scene {
+  width: 100vw;
+  height: 100svh;
+  display: flex;
+  flex-direction: column;
+  --xr-background-material: transparent;
+}
+
+.video-panel {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  border-radius: 20px;
+  overflow: hidden;
+  --xr-background-material: translucent;
+  --xr-back: 32px;
+}
+
+.video-header {
+  display: flex;
+  align-items: center;
+  padding: 14px 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  flex-shrink: 0;
+  min-width: 0;
+}
+
+.video-filename {
+  font-size: 0.82rem;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.85);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.video-element {
+  width: 100%;
+  flex: 1;
+  min-height: 0;
+  background: #000;
+  display: block;
+  object-fit: contain;
+}
+
+.video-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px 16px 16px;
+  flex-shrink: 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.video-scrubber {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.video-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 4px;
+  border-radius: 2px;
+  background: rgba(255, 255, 255, 0.2);
+  outline: none;
+  cursor: pointer;
+}
+
+.video-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #fff;
+  cursor: pointer;
+}
+
+.video-bottom-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.video-play-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  border: 1.5px solid rgba(255, 255, 255, 0.25);
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+  font-size: 1rem;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.video-play-btn:hover {
+  background: rgba(255, 255, 255, 0.2);
+  border-color: rgba(255, 255, 255, 0.5);
+}
+
+.video-play-btn.loading {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.video-times {
+  display: flex;
+  gap: 4px;
+  font-size: 0.78rem;
+  color: rgba(255, 255, 255, 0.55);
+  font-variant-numeric: tabular-nums;
+  flex-shrink: 0;
+}
+
+.video-times-sep {
+  color: rgba(255, 255, 255, 0.25);
+}
+
+.video-error {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(255, 100, 90, 0.9);
+  font-size: 0.85rem;
+  text-align: center;
+  padding: 24px;
+  line-height: 1.5;
+}
