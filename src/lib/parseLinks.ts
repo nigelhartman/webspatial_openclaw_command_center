@@ -20,11 +20,16 @@ export function parseLinks(text: string): MessageSegment[] {
 
   URL_REGEX.lastIndex = 0
   while ((match = URL_REGEX.exec(text)) !== null) {
+    const raw = match[0]
+    // Strip trailing sentence punctuation that the agent appended after the URL
+    const url = raw.replace(/[.,!?;:]+$/, '')
+    const trailingPunct = raw.slice(url.length)
     if (match.index > lastIndex) {
       segments.push({ type: 'text', value: text.slice(lastIndex, match.index) })
     }
-    segments.push({ type: 'url', value: match[0] })
-    lastIndex = match.index + match[0].length
+    segments.push({ type: 'url', value: url })
+    if (trailingPunct) segments.push({ type: 'text', value: trailingPunct })
+    lastIndex = match.index + raw.length
   }
   if (lastIndex < text.length) {
     segments.push({ type: 'text', value: text.slice(lastIndex) })

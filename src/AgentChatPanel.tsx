@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { initScene } from '@webspatial/react-sdk'
 import { OpenClawClient, type Agent, type ChatMessage } from './lib/openclaw.ts'
 import { useVoice } from './lib/useVoice.ts'
+import { useTts } from './lib/useTts.ts'
 import { parseLinks, shortenUrl, isModelUrl, modelFilename, isAudioUrl, isVideoUrl, fileBasename } from './lib/parseLinks.ts'
 import './agent-chat.css'
 
@@ -24,7 +25,9 @@ export default function AgentChatPanel() {
   const clientRef = useRef<OpenClawClient | null>(null)
   const bottomRef = useRef<HTMLDivElement>(null)
   const webviewRefs = useRef(new Map<string, Window>())
+  const streamContentRef = useRef('')
   const voice = useVoice()
+  const tts = useTts()
 
   // Register this panel as open and broadcast to the agents list
   useEffect(() => {
@@ -134,9 +137,14 @@ export default function AgentChatPanel() {
     }
   }
 
+  function stripUrls(text: string): string {
+    return parseLinks(text).filter(s => s.type === 'text').map(s => s.value).join('')
+  }
+
   async function sendMessage(text: string) {
     if (!text.trim() || isSending || !clientRef.current) return
     setIsSending(true)
+    streamContentRef.current = ''
 
     // Add user message
     setMessages(prev => [...prev, { role: 'user', content: text }])
@@ -149,6 +157,7 @@ export default function AgentChatPanel() {
         agentId,
         text,
         (chunk) => {
+          streamContentRef.current = chunk
           setMessages(prev => {
             const next = [...prev]
             const last = next[next.length - 1]
@@ -160,6 +169,8 @@ export default function AgentChatPanel() {
           })
         },
         () => {
+          const finalText = streamContentRef.current
+          streamContentRef.current = ''
           setMessages(prev => {
             const next = [...prev]
             const last = next[next.length - 1]
@@ -169,6 +180,7 @@ export default function AgentChatPanel() {
             return next
           })
           setIsSending(false)
+          tts.speak(stripUrls(finalText))
         },
       )
     } catch {
@@ -243,16 +255,30 @@ export default function AgentChatPanel() {
             <span className="chat-header-emoji">{agent.identity.emoji}</span>
           )}
           <span className="chat-header-name">{agentLabel}</span>
-          <div
-            role="button"
-            tabIndex={isSending ? -1 : 0}
-            className={`new-session-btn${isSending ? ' disabled' : ''}`}
-            onClick={isSending ? undefined : handleNewSession}
-            onKeyDown={e => { if (!isSending && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); handleNewSession() } }}
-            aria-label="New session"
-            aria-disabled={isSending}
-          >
-            New
+          <div className="chat-header-actions">
+            <div
+              role="button"
+              tabIndex={0}
+              className={`speaker-btn${tts.enabled ? ' active' : ''}${tts.isSpeaking ? ' speaking' : ''}`}
+              onClick={tts.toggle}
+              onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); tts.toggle() } }}
+              aria-label={tts.enabled ? 'Speaker on — click to mute' : 'Speaker off — click to enable'}
+              aria-pressed={tts.enabled}
+              title={tts.enabled ? 'TTS on' : 'TTS off'}
+            >
+              {tts.enabled ? '🔊' : '🔇'}
+            </div>
+            <div
+              role="button"
+              tabIndex={isSending ? -1 : 0}
+              className={`new-session-btn${isSending ? ' disabled' : ''}`}
+              onClick={isSending ? undefined : handleNewSession}
+              onKeyDown={e => { if (!isSending && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); handleNewSession() } }}
+              aria-label="New session"
+              aria-disabled={isSending}
+            >
+              New
+            </div>
           </div>
         </header>
 
