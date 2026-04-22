@@ -42,3 +42,24 @@ export function shortenUrl(url: string): string {
     return url.length > 40 ? url.slice(0, 40) + '…' : url
   }
 }
+
+const MODEL_EXTS = ['.glb', '.usdz']
+
+export function isModelUrl(url: string): boolean {
+  try {
+    const pathname = new URL(url).pathname.toLowerCase()
+    return MODEL_EXTS.some(ext => pathname.endsWith(ext))
+  } catch {
+    const lower = url.toLowerCase().split('?')[0]
+    return MODEL_EXTS.some(ext => lower.endsWith(ext))
+  }
+}
+
+export function modelFilename(url: string): string {
+  try {
+    const parts = new URL(url).pathname.split('/')
+    return parts[parts.length - 1] || url
+  } catch {
+    return url.split('/').pop() || url
+  }
+}

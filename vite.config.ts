@@ -28,6 +28,7 @@ export default defineConfig({
         main: resolve(__dirname, "index.html"),
         "agent-chat": resolve(__dirname, "agent-chat.html"),
         webview: resolve(__dirname, "webview.html"),
+        "model-view": resolve(__dirname, "model-view.html"),
       },
     },
   },

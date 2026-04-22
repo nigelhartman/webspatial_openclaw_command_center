@@ -1,0 +1,64 @@
+.model-scene {
+  width: 100vw;
+  height: 100svh;
+  display: flex;
+  flex-direction: column;
+  --xr-background-material: transparent;
+}
+
+.model-panel {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  border-radius: 20px;
+  overflow: hidden;
+  --xr-background-material: transparent;
+  --xr-back: 32px;
+}
+
+.model-header {
+  display: flex;
+  align-items: center;
+  padding: 14px 16px;
+  flex-shrink: 0;
+  min-width: 0;
+}
+
+.model-filename {
+  font-size: 0.82rem;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.8);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.model-content {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 0;
+  padding: 12px;
+}
+
+.model-viewer {
+  width: 100%;
+  height: 100%;
+  /* depth controls how far the 3D model projects in front of the panel */
+  --xr-depth: 300px;
+}
+
+.model-status {
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 0.85rem;
+  text-align: center;
+}
+
+.model-error {
+  color: rgba(255, 100, 90, 0.9);
+  font-size: 0.85rem;
+  text-align: center;
+  padding: 24px;
+  line-height: 1.5;
+}

@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { initScene } from '@webspatial/react-sdk'
 import { OpenClawClient, type Agent, type ChatMessage } from './lib/openclaw.ts'
 import { useVoice } from './lib/useVoice.ts'
-import { parseLinks, shortenUrl } from './lib/parseLinks.ts'
+import { parseLinks, shortenUrl, isModelUrl, modelFilename } from './lib/parseLinks.ts'
 import './agent-chat.css'
 
 const PANEL_CHANNEL = 'openclaw-panels'
@@ -96,18 +96,28 @@ export default function AgentChatPanel() {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages])
 
-  function openWebView(url: string) {
+  function openLink(url: string) {
     // If already open and not closed, do nothing
     const existing = webviewRefs.current.get(url)
     if (existing && !existing.closed) return
 
-    const sceneId = `webview-${btoa(url).replace(/[^a-zA-Z0-9]/g, '').slice(0, 48)}`
-    initScene(sceneId, defaults => ({
-      ...defaults,
-      defaultSize: { width: 800, height: 700 },
-    }))
-    const win = window.open(`/webview.html?url=${encodeURIComponent(url)}`, sceneId)
-    if (win) webviewRefs.current.set(url, win)
+    const sceneId = `link-${btoa(url).replace(/[^a-zA-Z0-9]/g, '').slice(0, 48)}`
+
+    if (isModelUrl(url)) {
+      initScene(sceneId, defaults => ({
+        ...defaults,
+        defaultSize: { width: 600, height: 600 },
+      }))
+      const win = window.open(`/model-view.html?url=${encodeURIComponent(url)}`, sceneId)
+      if (win) webviewRefs.current.set(url, win)
+    } else {
+      initScene(sceneId, defaults => ({
+        ...defaults,
+        defaultSize: { width: 800, height: 700 },
+      }))
+      const win = window.open(`/webview.html?url=${encodeURIComponent(url)}`, sceneId)
+      if (win) webviewRefs.current.set(url, win)
+    }
   }
 
   async function sendMessage(text: string) {
@@ -189,17 +199,20 @@ export default function AgentChatPanel() {
     if (segments.length === 1 && segments[0].type === 'text') return msg.content
     return segments.map((seg, i) => {
       if (seg.type === 'url') {
+        const label = isModelUrl(seg.value)
+          ? modelFilename(seg.value)
+          : shortenUrl(seg.value)
         return (
           <span
             key={i}
             role="button"
             tabIndex={0}
             className="msg-link-btn"
-            onClick={() => openWebView(seg.value)}
-            onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openWebView(seg.value) } }}
+            onClick={() => openLink(seg.value)}
+            onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openLink(seg.value) } }}
             title={seg.value}
           >
-            {shortenUrl(seg.value)}
+            {label}
           </span>
         )
       }
