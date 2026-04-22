@@ -44,6 +44,7 @@ export function shortenUrl(url: string): string {
 }
 
 const MODEL_EXTS = ['.glb', '.usdz']
+const AUDIO_EXTS = ['.mp3', '.wav', '.ogg', '.m4a', '.aac', '.flac']
 
 export function isModelUrl(url: string): boolean {
   try {
@@ -56,6 +57,25 @@ export function isModelUrl(url: string): boolean {
 }
 
 export function modelFilename(url: string): string {
+  try {
+    const parts = new URL(url).pathname.split('/')
+    return parts[parts.length - 1] || url
+  } catch {
+    return url.split('/').pop() || url
+  }
+}
+
+export function isAudioUrl(url: string): boolean {
+  try {
+    const pathname = new URL(url).pathname.toLowerCase()
+    return AUDIO_EXTS.some(ext => pathname.endsWith(ext))
+  } catch {
+    const lower = url.toLowerCase().split('?')[0]
+    return AUDIO_EXTS.some(ext => lower.endsWith(ext))
+  }
+}
+
+export function fileBasename(url: string): string {
   try {
     const parts = new URL(url).pathname.split('/')
     return parts[parts.length - 1] || url
