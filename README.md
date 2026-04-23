@@ -2,7 +2,11 @@
 
 A starter kit for building spatial AI agent interfaces on top of [OpenClaw](https://github.com/openclaw/openclaw) using the [WebSpatial SDK](https://github.com/webspatial/webspatial-sdk). Run it in the Pico emulator to get a floating agent list and per-agent chat panels with voice input.
 
-https://github.com/user-attachments/assets/c1d86263-72b5-4244-b13a-502e13b0f192
+
+
+https://github.com/user-attachments/assets/58710def-2c3a-43cf-9567-d4a16ff5675f
+
+
 
 ---
 
