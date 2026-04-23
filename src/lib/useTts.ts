@@ -1,73 +1,79 @@
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
-const TTS_KEY = 'tts-enabled'
-
-// Default voice: ElevenLabs "Rachel"
-const DEFAULT_VOICE_ID = '21m00Tcm4TlvDq8ikWAM'
+const DEFAULT_VOICE_ID = 'JBFqnCBsd6RMkjVDRZzb'
 
 export function useTts() {
-  const [enabled, setEnabled] = useState(() => localStorage.getItem(TTS_KEY) === 'true')
   const [isSpeaking, setIsSpeaking] = useState(false)
-  const audioRef = useRef<HTMLAudioElement | null>(null)
+  const [error, setError] = useState<string | null>(null)
+  const ctxRef = useRef<AudioContext | null>(null)
+  const sourceRef = useRef<AudioBufferSourceNode | null>(null)
 
-  function toggle() {
-    const next = !enabled
-    setEnabled(next)
-    localStorage.setItem(TTS_KEY, String(next))
-    if (!next) {
-      audioRef.current?.pause()
-      setIsSpeaking(false)
+  useEffect(() => {
+    return () => {
+      try { sourceRef.current?.stop() } catch { /* already stopped */ }
+      ctxRef.current?.close()
     }
-  }
+  }, [])
 
   async function speak(text: string) {
-    if (!enabled || !text.trim()) return
+    if (!text.trim()) return
 
     const apiKey = import.meta.env.VITE_ELEVENLABS_API_KEY as string | undefined
-    if (!apiKey) return
+    if (!apiKey) { setError('No ElevenLabs API key'); return }
+
+    // Create/resume AudioContext within this user gesture so playback is allowed
+    if (!ctxRef.current || ctxRef.current.state === 'closed') {
+      ctxRef.current = new AudioContext()
+    }
+    if (ctxRef.current.state === 'suspended') {
+      await ctxRef.current.resume()
+    }
+
+    try { sourceRef.current?.stop() } catch { /* already stopped */ }
+    sourceRef.current = null
 
     const voiceId = (import.meta.env.VITE_ELEVENLABS_VOICE_ID as string | undefined) ?? DEFAULT_VOICE_ID
 
-    // Stop any in-progress speech
-    if (audioRef.current) {
-      audioRef.current.pause()
-      audioRef.current = null
-    }
-
     setIsSpeaking(true)
+    setError(null)
+
     try {
-      const res = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`, {
-        method: 'POST',
-        headers: {
-          'xi-api-key': apiKey,
-          'Content-Type': 'application/json',
+      const res = await fetch(
+        `https://api.elevenlabs.io/v1/text-to-speech/${voiceId}?output_format=mp3_44100_128`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'xi-api-key': apiKey,
+          },
+          body: JSON.stringify({ text, model_id: 'eleven_multilingual_v2' }),
         },
-        body: JSON.stringify({
-          text,
-          model_id: 'eleven_turbo_v2_5',
-          voice_settings: { stability: 0.5, similarity_boost: 0.75 },
-        }),
-      })
+      )
       if (!res.ok) throw new Error(`ElevenLabs ${res.status}`)
 
-      const blob = await res.blob()
-      const url = URL.createObjectURL(blob)
-      const audio = new Audio(url)
-      audioRef.current = audio
+      const arrayBuffer = await res.arrayBuffer()
+      const audioBuffer = await ctxRef.current.decodeAudioData(arrayBuffer)
 
-      audio.onended = () => {
+      const source = ctxRef.current.createBufferSource()
+      source.buffer = audioBuffer
+      source.connect(ctxRef.current.destination)
+      sourceRef.current = source
+      source.onended = () => {
         setIsSpeaking(false)
-        URL.revokeObjectURL(url)
+        if (sourceRef.current === source) sourceRef.current = null
       }
-      audio.onerror = () => {
-        setIsSpeaking(false)
-        URL.revokeObjectURL(url)
-      }
-      await audio.play()
-    } catch {
+      source.start(0)
+    } catch (e) {
       setIsSpeaking(false)
+      setError(e instanceof Error ? e.message : 'TTS failed')
     }
   }
 
-  return { enabled, toggle, speak, isSpeaking }
+  function stop() {
+    try { sourceRef.current?.stop() } catch { /* already stopped */ }
+    sourceRef.current = null
+    setIsSpeaking(false)
+  }
+
+  return { speak, stop, isSpeaking, error }
 }

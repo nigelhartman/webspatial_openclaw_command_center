@@ -41,7 +41,8 @@ export function useVoice() {
         try {
           const form = new FormData()
           form.append('file', blob, 'recording.webm')
-          form.append('model_id', 'scribe_v1')
+          form.append('model_id', 'scribe_v2')
+          form.append('language_code', 'eng')
           const res = await fetch('https://api.elevenlabs.io/v1/speech-to-text', {
             method: 'POST',
             headers: { 'xi-api-key': ELEVENLABS_KEY },

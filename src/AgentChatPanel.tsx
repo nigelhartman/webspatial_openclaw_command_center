@@ -25,9 +25,9 @@ export default function AgentChatPanel() {
   const clientRef = useRef<OpenClawClient | null>(null)
   const bottomRef = useRef<HTMLDivElement>(null)
   const webviewRefs = useRef(new Map<string, Window>())
-  const streamContentRef = useRef('')
   const voice = useVoice()
   const tts = useTts()
+  const [speakingMsgIdx, setSpeakingMsgIdx] = useState<number | null>(null)
 
   // Register this panel as open and broadcast to the agents list
   useEffect(() => {
@@ -93,6 +93,11 @@ export default function AgentChatPanel() {
     return () => { client.close(); clientRef.current = null }
   }, [agentId])
 
+  // Clear speaking indicator when audio ends
+  useEffect(() => {
+    if (!tts.isSpeaking) setSpeakingMsgIdx(null)
+  }, [tts.isSpeaking])
+
   // Scroll to bottom whenever messages change (history load or new message)
   useEffect(() => {
     if (messages.length === 0) return
@@ -141,10 +146,19 @@ export default function AgentChatPanel() {
     return parseLinks(text).filter(s => s.type === 'text').map(s => s.value).join('')
   }
 
+  function handleSpeak(idx: number, text: string) {
+    if (speakingMsgIdx === idx) {
+      tts.stop()
+      setSpeakingMsgIdx(null)
+    } else {
+      setSpeakingMsgIdx(idx)
+      tts.speak(stripUrls(text))
+    }
+  }
+
   async function sendMessage(text: string) {
     if (!text.trim() || isSending || !clientRef.current) return
     setIsSending(true)
-    streamContentRef.current = ''
 
     // Add user message
     setMessages(prev => [...prev, { role: 'user', content: text }])
@@ -157,20 +171,16 @@ export default function AgentChatPanel() {
         agentId,
         text,
         (chunk) => {
-          streamContentRef.current = chunk
           setMessages(prev => {
             const next = [...prev]
             const last = next[next.length - 1]
             if (last?.role === 'assistant' && last.streaming) {
-              // Each chunk is the full accumulated text so far — replace, don't append
               next[next.length - 1] = { ...last, content: chunk }
             }
             return next
           })
         },
         () => {
-          const finalText = streamContentRef.current
-          streamContentRef.current = ''
           setMessages(prev => {
             const next = [...prev]
             const last = next[next.length - 1]
@@ -180,7 +190,6 @@ export default function AgentChatPanel() {
             return next
           })
           setIsSending(false)
-          tts.speak(stripUrls(finalText))
         },
       )
     } catch {
@@ -258,18 +267,6 @@ export default function AgentChatPanel() {
           <div className="chat-header-actions">
             <div
               role="button"
-              tabIndex={0}
-              className={`speaker-btn${tts.enabled ? ' active' : ''}${tts.isSpeaking ? ' speaking' : ''}`}
-              onClick={tts.toggle}
-              onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); tts.toggle() } }}
-              aria-label={tts.enabled ? 'Speaker on — click to mute' : 'Speaker off — click to enable'}
-              aria-pressed={tts.enabled}
-              title={tts.enabled ? 'TTS on' : 'TTS off'}
-            >
-              {tts.enabled ? '🔊' : '🔇'}
-            </div>
-            <div
-              role="button"
               tabIndex={isSending ? -1 : 0}
               className={`new-session-btn${isSending ? ' disabled' : ''}`}
               onClick={isSending ? undefined : handleNewSession}
@@ -295,6 +292,19 @@ export default function AgentChatPanel() {
               className={`msg ${msg.role === 'user' ? 'msg-user' : `msg-assistant${msg.streaming ? ' streaming' : ''}`}`}
             >
               {renderMessage(msg)}
+              {/* TTS play button — disabled until AudioContext autoplay is resolved
+              {msg.role === 'assistant' && !msg.streaming && msg.content && (
+                <div
+                  role="button"
+                  tabIndex={0}
+                  className={`msg-speak-btn${speakingMsgIdx === i ? ' speaking' : ''}`}
+                  onClick={() => handleSpeak(i, msg.content)}
+                  onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleSpeak(i, msg.content) } }}
+                  aria-label={speakingMsgIdx === i ? 'Stop speaking' : 'Speak this message'}
+                >
+                  {speakingMsgIdx === i ? '■' : '▶'}
+                </div>
+              )} */}
             </div>
           ))}
           <div ref={bottomRef} />
@@ -317,6 +327,7 @@ export default function AgentChatPanel() {
             {voiceBtnLabel()}
           </div>
           {voice.error && <p className="voice-error">{voice.error}</p>}
+          {tts.error && <p className="voice-error">{tts.error}</p>}
         </div>
 
       </div>
