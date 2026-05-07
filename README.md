@@ -1,6 +1,6 @@
 # WebSpatial OpenClaw Command Center
 
-A starter kit for building spatial AI agent interfaces on top of [OpenClaw](https://github.com/openclaw/openclaw) using the [WebSpatial SDK](https://developer.picoxr.com/document/web/webspatial/). Run it in the [Pico emulator](https://developer.picoxr.com/document/spatial-toolkit/install-pico-emulator/) to get a floating agent list and per-agent chat panels with voice input.
+A [SensAI Hackademy](https://sensaihackademy.com) starter kit for building spatial AI agent interfaces on top of [OpenClaw](https://github.com/openclaw/openclaw) using the [WebSpatial SDK](https://developer.picoxr.com/document/web/webspatial/). Run it in the [Pico emulator](https://developer.picoxr.com/document/spatial-toolkit/install-pico-emulator/) to get a floating agent list and per-agent chat panels with voice input.
 
 ---
 
