@@ -1,11 +1,18 @@
 # WebSpatial OpenClaw Command Center
 
-A starter kit for building spatial AI agent interfaces on top of [OpenClaw](https://github.com/openclaw/openclaw) using the [WebSpatial SDK](https://developer.picoxr.com/document/web/webspatial/). Run it in the Pico emulator to get a floating agent list and per-agent chat panels with voice input.
+A starter kit for building spatial AI agent interfaces on top of [OpenClaw](https://github.com/openclaw/openclaw) using the [WebSpatial SDK](https://developer.picoxr.com/document/web/webspatial/). Run it in the [Pico emulator](https://developer.picoxr.com/document/spatial-toolkit/install-pico-emulator/) to get a floating agent list and per-agent chat panels with voice input.
 
+---
 
+## 🎥 Guided Setup & Demo
 
-https://github.com/user-attachments/assets/58710def-2c3a-43cf-9567-d4a16ff5675f
+[Watch the session](https://www.youtube.com/watch?v=XQJuaXmwbqM&list=PLRQI9ZSqDkKdqhIYyEMu3f1g3SyzpfZn4&index=4)
+<br>
 
+▶️ Follow the full step-by-step tutorial
+<br>
+
+<img width="731" height="341" alt="image" src="https://github.com/user-attachments/assets/4df3893c-1761-42ab-93a1-deab2470b1ba" />
 
 
 ---
@@ -16,6 +23,8 @@ https://github.com/user-attachments/assets/58710def-2c3a-43cf-9567-d4a16ff5675f
 - **Chat panel** — per-agent floating window with full conversation history, streaming responses, and voice input via ElevenLabs STT
 - **Device identity** — authenticates to the OpenClaw gateway with Ed25519 device keys generated in the browser (no manual pairing required after the first approval)
 - **Voice input** — tap to record, auto-transcribed and sent to the agent
+
+https://github.com/user-attachments/assets/58710def-2c3a-43cf-9567-d4a16ff5675f
 
 ---
 
