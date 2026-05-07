@@ -1,6 +1,6 @@
 # WebSpatial OpenClaw Command Center
 
-A starter kit for building spatial AI agent interfaces on top of [OpenClaw](https://github.com/openclaw/openclaw) using the [WebSpatial SDK](https://github.com/webspatial/webspatial-sdk). Run it in the Pico emulator to get a floating agent list and per-agent chat panels with voice input.
+A starter kit for building spatial AI agent interfaces on top of [OpenClaw](https://github.com/openclaw/openclaw) using the [WebSpatial SDK](https://developer.picoxr.com/document/web/webspatial/). Run it in the Pico emulator to get a floating agent list and per-agent chat panels with voice input.
 
 
 
@@ -103,7 +103,7 @@ Vite starts on `http://localhost:5173`. The dev server proxies WebSocket connect
 
 The app runs in the **Pico Emulator** — a desktop app that simulates the Pico XR browser environment. A physical Pico headset is not required.
 
-Download **Pico Emulator 0.11.1** (required for the latest WebSpatial capabilities):
+Download **Pico Emulator 0.11.1** (required for the latest [WebSpatial](https://developer.picoxr.com/document/web/webspatial/) capabilities):
 
 | Platform | Link |
 |----------|------|
@@ -193,3 +193,16 @@ The browser generates an Ed25519 key pair on first use (stored in `localStorage`
 - [Vite 8](https://vite.dev/) — multi-page build + WebSocket proxy
 - [ElevenLabs STT](https://elevenlabs.io/docs/api-reference/speech-to-text) `scribe_v1`
 - [OpenClaw](https://github.com/openclaw/openclaw) gateway WebSocket protocol (tested on v2026.4.19-beta.2)
+
+---
+
+## Acknowledgements & Credits
+* Check out [Master SensAI Kits](https://github.com/SensAIHackademy/SensAIKits) for a full collection of context-aware AI tools for Unity and Meta XR.
+* Explore all the other [SensAI PICO Kits](https://github.com/SensAIHackademy/SensAI-PICO-Kits) for world model & voice-command templates for PICO.
+* Look at [SensAI World Model Kits](https://github.com/SensAIHackademy/SensAIWorldModelKits) for a collection of world model kits for WebXR, Unity, and Unreal Engine.
+* Check out [SensAI Hacks](https://sensaihack.com) and connect with a community of creators and innovators.
+* Visit [SensAI Knowledge Hub](https://xrbootcamp.notion.site/SensAI-Knowledge-Hub-21f0095e34d880ec9826d9749ae56619) for curated learning resources and inspiration.
+
+Powered by [SensAI Hackademy](https://sensaihackademy.com)
+
+---
