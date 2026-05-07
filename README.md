@@ -12,7 +12,7 @@ A starter kit for building spatial AI agent interfaces on top of [OpenClaw](http
 ▶️ Follow the full step-by-step tutorial
 <br>
 
-<img width="731" height="341" alt="image" src="https://github.com/user-attachments/assets/4df3893c-1761-42ab-93a1-deab2470b1ba" />
+<img width="731" alt="image" src="https://github.com/user-attachments/assets/4df3893c-1761-42ab-93a1-deab2470b1ba" />
 
 
 ---
